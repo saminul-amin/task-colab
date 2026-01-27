@@ -2,6 +2,9 @@ import { Router } from "express";
 import { AuthRoutes } from "../modules/auth";
 import { UserRoutes } from "../modules/user";
 import { ProjectRoutes } from "../modules/project";
+import { RequestRoutes } from "../modules/request";
+import { TaskRoutes } from "../modules/task";
+import { SubmissionRoutes } from "../modules/submission";
 
 export const router = Router();
 
@@ -17,6 +20,18 @@ const moduleRoutes = [
   {
     path: "/projects",
     route: ProjectRoutes,
+  },
+  {
+    path: "/requests",
+    route: RequestRoutes,
+  },
+  {
+    path: "/tasks",
+    route: TaskRoutes,
+  },
+  {
+    path: "/submissions",
+    route: SubmissionRoutes,
   },
 ];
 
