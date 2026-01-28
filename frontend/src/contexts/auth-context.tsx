@@ -11,10 +11,10 @@ import {
 import { useRouter } from "next/navigation";
 import {
   authService,
-  User,
   LoginPayload,
   RegisterPayload,
 } from "@/services/auth.service";
+import { User } from "@/types";
 
 interface AuthContextType {
   user: User | null;

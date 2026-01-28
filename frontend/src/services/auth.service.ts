@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { User } from "@/types";
 
 export interface LoginPayload {
   email: string;
@@ -21,17 +22,15 @@ export interface AuthResponse {
   };
 }
 
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: "admin" | "buyer" | "problem_solver";
-  status: "active" | "blocked";
+export interface UpdateProfilePayload {
+  name?: string;
+  phone?: string;
   bio?: string;
-  skills?: string[];
-  profileImage?: string;
-  createdAt: string;
-  updatedAt: string;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
 }
 
 export const authService = {
@@ -47,11 +46,12 @@ export const authService = {
     return api.get<User>("/api/auth/me");
   },
 
-  async changePassword(currentPassword: string, newPassword: string) {
-    return api.post("/api/auth/change-password", {
-      currentPassword,
-      newPassword,
-    });
+  async updateProfile(payload: UpdateProfilePayload) {
+    return api.patch<User>("/api/auth/me", payload);
+  },
+
+  async changePassword(payload: ChangePasswordPayload) {
+    return api.post("/api/auth/change-password", payload);
   },
 
   logout() {
