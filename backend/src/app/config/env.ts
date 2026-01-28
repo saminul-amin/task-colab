@@ -13,27 +13,30 @@ interface EnvConfig {
 }
 
 const loadEnvVariables = (): EnvConfig => {
-  const requiredEnvVariables: string[] = [
-    "PORT",
-    "MONGODB_URI",
-    "JWT_SECRET",
-    "JWT_EXPIRES_IN",
-    "BCRYPT_SALT_ROUNDS",
-  ];
+  if (process.env.NODE_ENV !== "production") {
+    const requiredEnvVariables: string[] = [
+      "MONGODB_URI",
+      "JWT_SECRET",
+      "JWT_EXPIRES_IN",
+      "BCRYPT_SALT_ROUNDS",
+      "PORT",
+      "NODE_ENV",
+    ];
 
-  requiredEnvVariables.forEach((key) => {
-    if (!process.env[key]) {
-      throw new Error(`Missing required environment variable: ${key}`);
-    }
-  });
+    requiredEnvVariables.forEach((key) => {
+      if (!process.env[key]) {
+        console.warn(`Warning: Missing environment variable: ${key}`);
+      }
+    });
+  }
 
   return {
     NODE_ENV: process.env.NODE_ENV || "development",
-    PORT: parseInt(process.env.PORT as string, 10),
-    MONGODB_URI: process.env.MONGODB_URI as string,
-    JWT_SECRET: process.env.JWT_SECRET as string,
-    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN as string,
-    BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS as string, 10),
+    PORT: parseInt(process.env.PORT || "5000", 10),
+    MONGODB_URI: process.env.MONGODB_URI || "",
+    JWT_SECRET: process.env.JWT_SECRET || "fallback-secret-change-in-production",
+    JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
+    BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS || "12", 10),
   };
 };
 
