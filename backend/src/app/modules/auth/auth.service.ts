@@ -2,12 +2,14 @@ import httpStatus from "http-status-codes";
 import { User } from "../user/user.model";
 import { AppError, createToken } from "../../utils";
 import { envVars } from "../../config/env";
+import { uploadToCloudinary } from "../../config/cloudinary";
 import {
   IAuthResponse,
   IChangePasswordPayload,
   IJwtPayload,
   ILoginPayload,
   IRegisterPayload,
+  IUpdateProfilePayload,
 } from "./auth.interface";
 import { USER_ROLES, USER_STATUS } from "../user/user.constant";
 
@@ -121,9 +123,35 @@ const getMe = async (userId: string) => {
   return user;
 };
 
+const updateProfile = async (
+  userId: string,
+  payload: IUpdateProfilePayload,
+  file?: Express.Multer.File
+) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  // Handle profile image upload
+  if (file) {
+    const uploadResult = await uploadToCloudinary(file.buffer);
+    payload.profileImage = uploadResult.url;
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: payload },
+    { new: true, runValidators: true }
+  );
+
+  return updatedUser;
+};
+
 export const AuthService = {
   register,
   login,
   changePassword,
   getMe,
+  updateProfile,
 };

@@ -14,6 +14,13 @@ export interface IChangePasswordPayload {
   newPassword: string;
 }
 
+export interface IUpdateProfilePayload {
+  name?: string;
+  phone?: string;
+  bio?: string;
+  profileImage?: string;
+}
+
 export interface IAuthResponse {
   accessToken: string;
   user: {

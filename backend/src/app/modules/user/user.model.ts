@@ -35,6 +35,11 @@ const userSchema = new Schema<IUserDocument, IUserModel>(
       enum: Object.values(USER_STATUS),
       default: USER_STATUS.ACTIVE,
     },
+    phone: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     profileImage: {
       type: String,
       default: null,

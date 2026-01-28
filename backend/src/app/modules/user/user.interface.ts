@@ -7,6 +7,7 @@ export interface IUser {
   password: string;
   role: TUserRole;
   status: TUserStatus;
+  phone?: string;
   profileImage?: string;
   bio?: string;
   skills?: string[];

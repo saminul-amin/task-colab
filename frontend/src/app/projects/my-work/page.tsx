@@ -116,7 +116,7 @@ export default function MyWorkPage() {
 
   if (error) {
     return (
-      <div className="container py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <ErrorState message={error} onRetry={fetchData} />
       </div>
     );
@@ -124,7 +124,7 @@ export default function MyWorkPage() {
 
   return (
     <FadeIn>
-      <div className="container py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">My Work</h1>
           <p className="text-muted-foreground mt-2">

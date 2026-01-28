@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "@/contexts/auth-context";
 import { authService } from "@/services/auth.service";
 import { USER_ROLE_LABELS } from "@/types";
@@ -32,20 +33,26 @@ import {
   CheckCircle2,
   Save,
   X,
+  Camera,
+  Upload,
 } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading, refreshUser } = useAuth();
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [bio, setBio] = useState("");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -63,8 +70,54 @@ export default function ProfilePage() {
       setName(user.name);
       setPhone(user.phone || "");
       setBio(user.bio || "");
+      setImagePreview(user.profileImage || null);
     }
   }, [user]);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMessage("Image size must be less than 5MB");
+        return;
+      }
+      // Validate file type
+      if (!file.type.match(/^image\/(jpeg|png|gif|webp)$/)) {
+        setErrorMessage("Only JPEG, PNG, GIF, and WebP images are allowed");
+        return;
+      }
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+      setErrorMessage(null);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedImage) return;
+
+    try {
+      setIsUploadingImage(true);
+      setErrorMessage(null);
+
+      const response = await authService.updateProfile({
+        profileImage: selectedImage,
+      });
+
+      if (response.success) {
+        setSuccessMessage("Profile picture updated successfully!");
+        setSelectedImage(null);
+        refreshUser();
+        setTimeout(() => setSuccessMessage(null), 3000);
+      } else {
+        setErrorMessage(response.message || "Failed to upload image");
+      }
+    } catch {
+      setErrorMessage("An error occurred while uploading image");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (!name.trim()) return;
@@ -142,6 +195,8 @@ export default function ProfilePage() {
       setName(user.name);
       setPhone(user.phone || "");
       setBio(user.bio || "");
+      setSelectedImage(null);
+      setImagePreview(user.profileImage || null);
     }
     setIsEditing(false);
   };
@@ -189,8 +244,36 @@ export default function ProfilePage() {
             <CardHeader>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
-                    {user.name.charAt(0).toUpperCase()}
+                  {/* Profile Image with Upload */}
+                  <div className="relative group">
+                    {imagePreview ? (
+                      <div className="h-20 w-20 rounded-full overflow-hidden relative">
+                        <Image
+                          src={imagePreview}
+                          alt={user.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-20 w-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      <Camera className="h-6 w-6 text-white" />
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
                   </div>
                   <div>
                     <CardTitle className="text-xl">{user.name}</CardTitle>
@@ -203,32 +286,53 @@ export default function ProfilePage() {
                     </Badge>
                   </div>
                 </div>
-                {!isEditing ? (
-                  <Button variant="outline" onClick={() => setIsEditing(true)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                ) : (
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={cancelEdit}>
-                      <X className="h-4 w-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button onClick={handleSaveProfile} disabled={isSubmitting || !name.trim()}>
-                      {isSubmitting ? (
+                <div className="flex flex-col gap-2">
+                  {selectedImage && (
+                    <Button 
+                      onClick={handleImageUpload} 
+                      disabled={isUploadingImage}
+                      size="sm"
+                    >
+                      {isUploadingImage ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Saving...
+                          Uploading...
                         </>
                       ) : (
                         <>
-                          <Save className="h-4 w-4 mr-2" />
-                          Save
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload Photo
                         </>
                       )}
                     </Button>
-                  </div>
-                )}
+                  )}
+                  {!isEditing ? (
+                    <Button variant="outline" onClick={() => setIsEditing(true)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={cancelEdit}>
+                        <X className="h-4 w-4 mr-2" />
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSaveProfile} disabled={isSubmitting || !name.trim()}>
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Save
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </CardHeader>
           </Card>

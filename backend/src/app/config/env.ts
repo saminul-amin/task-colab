@@ -10,6 +10,9 @@ interface EnvConfig {
   JWT_SECRET: string;
   JWT_EXPIRES_IN: string;
   BCRYPT_SALT_ROUNDS: number;
+  CLOUDINARY_CLOUD_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_API_SECRET: string;
 }
 
 const loadEnvVariables = (): EnvConfig => {
@@ -17,10 +20,6 @@ const loadEnvVariables = (): EnvConfig => {
     const requiredEnvVariables: string[] = [
       "MONGODB_URI",
       "JWT_SECRET",
-      "JWT_EXPIRES_IN",
-      "BCRYPT_SALT_ROUNDS",
-      "PORT",
-      "NODE_ENV",
     ];
 
     requiredEnvVariables.forEach((key) => {
@@ -37,6 +36,9 @@ const loadEnvVariables = (): EnvConfig => {
     JWT_SECRET: process.env.JWT_SECRET || "fallback-secret-change-in-production",
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "7d",
     BCRYPT_SALT_ROUNDS: parseInt(process.env.BCRYPT_SALT_ROUNDS || "12", 10),
+    CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME || "",
+    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY || "",
+    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET || "",
   };
 };
 

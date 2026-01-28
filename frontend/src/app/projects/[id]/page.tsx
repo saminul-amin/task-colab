@@ -377,7 +377,7 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
 
   if (error || !project) {
     return (
-      <div className="container py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <ErrorState message={error || "Project not found"} onRetry={fetchProjectData} />
       </div>
     );
@@ -385,7 +385,7 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
 
   return (
     <FadeIn>
-      <div className="container py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Back Button */}
         <div className="mb-6">
           <Button variant="ghost" onClick={() => router.back()}>

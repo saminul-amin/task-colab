@@ -112,7 +112,7 @@ export default function MyProjectsPage() {
 
   if (error) {
     return (
-      <div className="container py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <ErrorState message={error} onRetry={fetchProjects} />
       </div>
     );
@@ -126,7 +126,7 @@ export default function MyProjectsPage() {
 
   return (
     <FadeIn>
-      <div className="container py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold">My Projects</h1>

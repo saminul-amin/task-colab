@@ -26,6 +26,7 @@ export interface UpdateProfilePayload {
   name?: string;
   phone?: string;
   bio?: string;
+  profileImage?: File;
 }
 
 export interface ChangePasswordPayload {
@@ -47,7 +48,18 @@ export const authService = {
   },
 
   async updateProfile(payload: UpdateProfilePayload) {
-    return api.patch<User>("/api/auth/me", payload);
+    // If there's a profile image, use FormData
+    if (payload.profileImage) {
+      const formData = new FormData();
+      formData.append("profileImage", payload.profileImage);
+      if (payload.name) formData.append("name", payload.name);
+      if (payload.phone) formData.append("phone", payload.phone);
+      if (payload.bio) formData.append("bio", payload.bio);
+      return api.patchFormData<User>("/api/auth/me", formData);
+    }
+    // Otherwise use regular JSON
+    const { profileImage, ...rest } = payload;
+    return api.patch<User>("/api/auth/me", rest);
   },
 
   async changePassword(payload: ChangePasswordPayload) {

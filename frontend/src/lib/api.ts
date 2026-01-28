@@ -55,6 +55,17 @@ class ApiClient {
     return response.json();
   }
 
+  async patchFormData<T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: "PATCH",
+      headers: {
+        ...this.getAuthHeader(),
+      },
+      body: formData,
+    });
+    return response.json();
+  }
+
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: "DELETE",

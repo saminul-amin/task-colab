@@ -322,3 +322,44 @@ export const SUBMISSION_STATUS_LABELS: Record<SubmissionStatus, string> = {
   rejected: "Rejected",
   revision_requested: "Revision Requested",
 };
+
+// Message Types
+export type MessageType = "text" | "file" | "system";
+
+export interface MessageAttachment {
+  name: string;
+  url: string;
+  size: number;
+  mimeType: string;
+}
+
+export interface Message {
+  _id: string;
+  conversation: string;
+  sender: User | string;
+  content: string;
+  type: MessageType;
+  attachment?: MessageAttachment;
+  readBy: string[];
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Conversation {
+  _id: string;
+  project: Pick<Project, "_id" | "title" | "status"> | string;
+  participants: User[];
+  lastMessage?: Message;
+  lastMessageAt?: string;
+  unreadCount?: number;
+  isDeleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMessagePayload {
+  conversationId: string;
+  content: string;
+  type?: MessageType;
+}

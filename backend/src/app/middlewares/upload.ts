@@ -20,6 +20,9 @@ const storage = multer.diskStorage({
   },
 });
 
+// Memory storage for Cloudinary uploads
+const memoryStorage = multer.memoryStorage();
+
 const fileFilter = (
   _req: Request,
   file: Express.Multer.File,
@@ -38,10 +41,38 @@ const fileFilter = (
   }
 };
 
+const imageFileFilter = (
+  _req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ];
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new AppError(400, "Only image files (JPEG, PNG, GIF, WebP) are allowed") as unknown as Error);
+  }
+};
+
 export const upload = multer({
   storage,
   fileFilter,
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB
+  },
+});
+
+export const uploadImage = multer({
+  storage: memoryStorage,
+  fileFilter: imageFileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB for images
   },
 });

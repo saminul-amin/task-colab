@@ -5,6 +5,7 @@ import { ProjectRoutes } from "../modules/project";
 import { RequestRoutes } from "../modules/request";
 import { TaskRoutes } from "../modules/task";
 import { SubmissionRoutes } from "../modules/submission";
+import { MessageRoutes } from "../modules/message/message.route";
 
 export const router = Router();
 
@@ -32,6 +33,10 @@ const moduleRoutes = [
   {
     path: "/submissions",
     route: SubmissionRoutes,
+  },
+  {
+    path: "/messages",
+    route: MessageRoutes,
   },
 ];
 
