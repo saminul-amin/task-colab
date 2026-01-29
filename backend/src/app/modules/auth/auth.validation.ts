@@ -26,6 +26,10 @@ export const registerValidation = z.object({
       .min(1, "Password is required")
       .min(6, "Password must be at least 6 characters")
       .max(50, "Password cannot exceed 50 characters"),
+    role: z
+      .enum(["buyer", "problem_solver"])
+      .optional()
+      .default("problem_solver"),
   }),
 });
 

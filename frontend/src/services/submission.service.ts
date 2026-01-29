@@ -87,7 +87,7 @@ export const submissionService = {
     description: string
   ): Promise<ApiResponse<Submission>> {
     const formData = new FormData();
-    formData.append("task", taskId);
+    formData.append("taskId", taskId);
     formData.append("file", file);
     formData.append("description", description);
 

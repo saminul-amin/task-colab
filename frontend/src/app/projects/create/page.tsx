@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/hooks/use-toast";
 import {
   CreateProjectPayload,
   ProjectCategory,
@@ -38,6 +39,7 @@ import Link from "next/link";
 export default function CreateProjectPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -136,11 +138,26 @@ export default function CreateProjectPage() {
       const response = await projectService.createProject(payload);
 
       if (response.success && response.data) {
+        toast({
+          title: "Project Created",
+          description: "Your project has been created successfully.",
+          variant: "success",
+        });
         router.push(`/projects/${response.data._id}`);
       } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to create project",
+          variant: "destructive",
+        });
         setError(response.message || "Failed to create project");
       }
     } catch {
+      toast({
+        title: "Error",
+        description: "An error occurred while creating the project",
+        variant: "destructive",
+      });
       setError("An error occurred while creating the project");
     } finally {
       setIsSubmitting(false);

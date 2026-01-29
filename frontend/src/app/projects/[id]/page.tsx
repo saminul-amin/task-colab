@@ -8,6 +8,7 @@ import { projectService } from "@/services/project.service";
 import { requestService } from "@/services/request.service";
 import { taskService } from "@/services/task.service";
 import { submissionService } from "@/services/submission.service";
+import { useToast } from "@/hooks/use-toast";
 import {
   Project,
   Request,
@@ -97,6 +98,7 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
   const { id } = use(params);
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const [project, setProject] = useState<Project | null>(null);
   const [requests, setRequests] = useState<Request[]>([]);
@@ -178,22 +180,37 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
     try {
       setIsSubmitting(true);
       const response = await requestService.createRequest({
-        project: id,
+        projectId: id,
         coverLetter: coverLetter.trim(),
         proposedBudget: proposedBudget ? parseFloat(proposedBudget) : undefined,
         proposedTimeline: proposedTimeline ? parseInt(proposedTimeline) : undefined,
       });
 
       if (response.success) {
+        toast({
+          title: "Application Submitted",
+          description: "Your application has been submitted successfully.",
+          variant: "success",
+        });
         setIsApplyDialogOpen(false);
         setCoverLetter("");
         setProposedBudget("");
         setProposedTimeline("");
 
         router.push("/projects/my-work");
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to submit application.",
+          variant: "destructive",
+        });
       }
     } catch {
-      // Handle error
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -203,10 +220,25 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
     try {
       const response = await requestService.acceptRequest(requestId);
       if (response.success) {
+        toast({
+          title: "Request Accepted",
+          description: "The problem solver has been assigned to this project.",
+          variant: "success",
+        });
         fetchProjectData();
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to accept request.",
+          variant: "destructive",
+        });
       }
     } catch {
-      // Handle error
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -214,22 +246,67 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
     try {
       const response = await requestService.rejectRequest(requestId);
       if (response.success) {
+        toast({
+          title: "Request Rejected",
+          description: "The application has been rejected.",
+        });
         setRequests(requests.map((r) =>
           r._id === requestId ? { ...r, status: "rejected" } : r
         ));
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to reject request.",
+          variant: "destructive",
+        });
       }
     } catch {
-      // Handle error
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleCreateTask = async () => {
-    if (!taskTitle.trim() || !taskDueDate) return;
+    if (!taskTitle.trim()) {
+      toast({
+        title: "Title Required",
+        description: "Please enter a task title.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (taskTitle.trim().length < 3) {
+      toast({
+        title: "Title Too Short",
+        description: "Task title must be at least 3 characters.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!taskDescription.trim() || taskDescription.trim().length < 10) {
+      toast({
+        title: "Description Required",
+        description: "Please enter a description (at least 10 characters).",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!taskDueDate) {
+      toast({
+        title: "Due Date Required",
+        description: "Please select a due date for the task.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       const response = await taskService.createTask({
-        project: id,
+        projectId: id,
         title: taskTitle.trim(),
         description: taskDescription.trim(),
         priority: taskPriority,
@@ -240,6 +317,11 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
       });
 
       if (response.success && response.data) {
+        toast({
+          title: "Task Created",
+          description: "The task has been created successfully.",
+          variant: "success",
+        });
         setTasks([...tasks, response.data]);
         setIsTaskDialogOpen(false);
         setTaskTitle("");
@@ -247,9 +329,19 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
         setTaskPriority("medium");
         setTaskDueDate("");
         setTaskEstimatedHours("");
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to create task.",
+          variant: "destructive",
+        });
       }
     } catch {
-      // Handle error
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -260,34 +352,87 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
       const response = await taskService.updateTaskStatus(taskId, status);
       if (response.success) {
         setTasks(tasks.map((t) => (t._id === taskId ? { ...t, status } : t)));
+        toast({
+          title: "Task Updated",
+          description: `Task status changed to ${TASK_STATUS_LABELS[status]}.`,
+          variant: "success",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to update task status.",
+          variant: "destructive",
+        });
       }
     } catch {
-      // Handle error
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleSubmitWork = async () => {
     if (!selectedTask || !submissionFile) return;
 
+    // Client-side validation with user-friendly messages
+    const description = submissionDescription.trim();
+    
+    if (!description) {
+      toast({
+        title: "Description Required",
+        description: "Please add a description of what you're submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (description.length < 10) {
+      toast({
+        title: "Description Too Short",
+        description: "Please provide a more detailed description (at least 10 characters).",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const response = await submissionService.createSubmission(
         selectedTask._id,
         submissionFile,
-        submissionDescription.trim()
+        description
       );
 
       if (response.success && response.data) {
+        toast({
+          title: "Work Submitted",
+          description: "Your submission has been uploaded for review.",
+          variant: "success",
+        });
         setSubmissions([...submissions, response.data]);
         setIsSubmitDialogOpen(false);
         setSelectedTask(null);
         setSubmissionFile(null);
         setSubmissionDescription("");
 
-        await handleUpdateTaskStatus(selectedTask._id, "review");
+        // Backend already updates task status to "review" when submission is created
+        // Just update local state to reflect the change
+        setTasks(tasks.map((t) => (t._id === selectedTask._id ? { ...t, status: "review" } : t)));
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to submit work.",
+          variant: "destructive",
+        });
       }
     } catch {
-      // Handle error
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -305,20 +450,46 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
       });
 
       if (response.success) {
+        const statusMessages = {
+          accepted: "Submission has been accepted.",
+          rejected: "Submission has been rejected.",
+          revision_requested: "Revision has been requested.",
+        };
+        toast({
+          title: "Review Submitted",
+          description: statusMessages[status],
+          variant: status === "accepted" ? "success" : "default",
+        });
         setSubmissions(submissions.map((s) =>
           s._id === submissionId ? { ...s, status, feedback } : s
         ));
 
-        if (status === "accepted") {
-          const submission = submissions.find((s) => s._id === submissionId);
-          if (submission) {
-            const taskId = typeof submission.task === "object" ? submission.task._id : submission.task;
-            await handleUpdateTaskStatus(taskId, "completed");
+        // Backend already updates task status when reviewing submissions
+        // We just need to update the local state to reflect the change
+        const submission = submissions.find((s) => s._id === submissionId);
+        if (submission) {
+          const taskId = typeof submission.task === "object" ? submission.task._id : submission.task;
+          if (status === "accepted") {
+            // Task is set to "completed" by backend
+            setTasks(tasks.map((t) => (t._id === taskId ? { ...t, status: "completed" } : t)));
+          } else if (status === "rejected" || status === "revision_requested") {
+            // Task is set back to "in_progress" by backend
+            setTasks(tasks.map((t) => (t._id === taskId ? { ...t, status: "in_progress" } : t)));
           }
         }
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to submit review.",
+          variant: "destructive",
+        });
       }
     } catch {
-      // Handle error
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -327,10 +498,25 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
     try {
       const response = await projectService.updateProjectStatus(id, "in_progress");
       if (response.success) {
+        toast({
+          title: "Project Started",
+          description: "The project is now in progress.",
+          variant: "success",
+        });
         setProject({ ...project, status: "in_progress" });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to start project.",
+          variant: "destructive",
+        });
       }
     } catch {
-      // Handle error
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -339,10 +525,25 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
     try {
       const response = await projectService.updateProjectStatus(id, "completed");
       if (response.success) {
+        toast({
+          title: "Project Completed",
+          description: "Congratulations! The project has been marked as completed.",
+          variant: "success",
+        });
         setProject({ ...project, status: "completed" });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to complete project.",
+          variant: "destructive",
+        });
       }
     } catch {
-      // Handle error
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -738,15 +939,15 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
                       <div className="space-y-2">
                         <Label>Title *</Label>
                         <Input
-                          placeholder="Task title"
+                          placeholder="Task title (at least 3 characters)"
                           value={taskTitle}
                           onChange={(e) => setTaskTitle(e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Description</Label>
+                        <Label>Description *</Label>
                         <Textarea
-                          placeholder="Task description..."
+                          placeholder="Describe the task in detail (at least 10 characters)..."
                           rows={3}
                           value={taskDescription}
                           onChange={(e) => setTaskDescription(e.target.value)}
@@ -895,13 +1096,14 @@ export default function ProjectDetailPage({ params }: ProjectPageProps) {
                     <p className="text-xs text-muted-foreground">Only ZIP files are allowed (max 50MB)</p>
                   </div>
                   <div className="space-y-2">
-                    <Label>Description</Label>
+                    <Label>Description *</Label>
                     <Textarea
-                      placeholder="Describe what's included in your submission..."
+                      placeholder="Describe what's included in your submission (e.g., files included, key features, any notes for the reviewer)..."
                       rows={3}
                       value={submissionDescription}
                       onChange={(e) => setSubmissionDescription(e.target.value)}
                     />
+                    <p className="text-xs text-muted-foreground">Minimum 10 characters required</p>
                   </div>
                 </div>
                 <DialogFooter>

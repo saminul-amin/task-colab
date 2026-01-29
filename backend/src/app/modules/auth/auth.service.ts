@@ -19,11 +19,14 @@ const register = async (payload: IRegisterPayload): Promise<IAuthResponse> => {
     throw new AppError(httpStatus.CONFLICT, "User with this email already exists");
   }
 
+  // Default to problem_solver if no role specified, and prevent admin registration
+  const role = payload.role === "buyer" ? USER_ROLES.BUYER : USER_ROLES.PROBLEM_SOLVER;
+
   const user = await User.create({
     name: payload.name,
     email: payload.email,
     password: payload.password,
-    role: USER_ROLES.PROBLEM_SOLVER,
+    role,
   });
 
   const jwtPayload: IJwtPayload = {

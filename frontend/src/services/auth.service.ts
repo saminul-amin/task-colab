@@ -10,6 +10,7 @@ export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
+  role?: "buyer" | "problem_solver";
 }
 
 export interface AuthResponse {

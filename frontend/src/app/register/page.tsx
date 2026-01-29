@@ -14,13 +14,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { User, Mail, Lock, Loader2 } from "lucide-react";
+import { User, Mail, Lock, Loader2, Briefcase, ShoppingBag } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type UserRole = "buyer" | "problem_solver";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState<UserRole>("problem_solver");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
@@ -42,7 +46,7 @@ export default function RegisterPage() {
 
     setIsLoading(true);
 
-    const result = await register({ name, email, password });
+    const result = await register({ name, email, password, role });
 
     if (result.success) {
       router.push("/dashboard");
@@ -71,6 +75,44 @@ export default function RegisterPage() {
                 {error}
               </div>
             )}
+            
+            {/* Role Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">I want to...</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setRole("buyer")}
+                  disabled={isLoading}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
+                    role === "buyer"
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <ShoppingBag className="h-6 w-6" />
+                  <span className="text-sm font-medium">Hire Talent</span>
+                  <span className="text-xs text-center opacity-70">Post projects & hire problem solvers</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("problem_solver")}
+                  disabled={isLoading}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all",
+                    role === "problem_solver"
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border hover:border-primary/50 text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Briefcase className="h-6 w-6" />
+                  <span className="text-sm font-medium">Find Work</span>
+                  <span className="text-xs text-center opacity-70">Browse & apply to projects</span>
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">
                 Full Name
@@ -152,7 +194,7 @@ export default function RegisterPage() {
                   Creating account...
                 </>
               ) : (
-                "Create Account"
+                `Create ${role === "buyer" ? "Buyer" : "Problem Solver"} Account`
               )}
             </Button>
             <p className="text-sm text-center text-muted-foreground">

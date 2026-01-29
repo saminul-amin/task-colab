@@ -222,14 +222,14 @@ export interface UpdateProjectPayload {
 }
 
 export interface CreateRequestPayload {
-  project: string;
+  projectId: string;
   coverLetter: string;
   proposedBudget?: number;
   proposedTimeline?: number;
 }
 
 export interface CreateTaskPayload {
-  project: string;
+  projectId: string;
   title: string;
   description: string;
   priority: TaskPriority;

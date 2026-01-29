@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/contexts/auth-context";
 import { messageService } from "@/services/message.service";
+import { useToast } from "@/hooks/use-toast";
 import { Conversation, Message, User } from "@/types";
 import {
   Card,
@@ -34,6 +35,7 @@ import {
 export default function MessagesPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -138,8 +140,20 @@ export default function MessagesPage() {
               : c
           )
         );
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to send message",
+          variant: "destructive",
+        });
+        setMessageInput(content);
       }
     } catch {
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
       // Restore message on error
       setMessageInput(content);
     } finally {

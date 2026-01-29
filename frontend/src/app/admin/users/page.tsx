@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
 import { userService } from "@/services/user.service";
+import { useToast } from "@/hooks/use-toast";
 import { User } from "@/types";
 import { ROLES } from "@/lib/constants";
 import {
@@ -55,6 +56,7 @@ import {
 export default function AdminUsersPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,13 +105,28 @@ export default function AdminUsersPage() {
         role: newRole as "admin" | "buyer" | "problem_solver",
       });
       if (response.success) {
+        toast({
+          title: "Role Updated",
+          description: `${selectedUser.name}'s role has been changed to ${newRole.replace("_", " ")}.`,
+          variant: "success",
+        });
         setUsers(users.map((u) => (u._id === selectedUser._id ? { ...u, role: newRole as User["role"] } : u)));
         setIsRoleDialogOpen(false);
         setSelectedUser(null);
         setNewRole("");
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update user role",
+          variant: "destructive",
+        });
       }
     } catch {
-      setError("Failed to update user role");
+      toast({
+        title: "Error",
+        description: "Failed to update user role",
+        variant: "destructive",
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -122,10 +139,25 @@ export default function AdminUsersPage() {
         status: newStatus,
       });
       if (response.success) {
+        toast({
+          title: newStatus === "blocked" ? "User Blocked" : "User Unblocked",
+          description: `${targetUser.name} has been ${newStatus === "blocked" ? "blocked" : "unblocked"}.`,
+          variant: newStatus === "blocked" ? "destructive" : "success",
+        });
         setUsers(users.map((u) => (u._id === targetUser._id ? { ...u, status: newStatus } : u)));
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update user status",
+          variant: "destructive",
+        });
       }
     } catch {
-      setError("Failed to update user status");
+      toast({
+        title: "Error",
+        description: "Failed to update user status",
+        variant: "destructive",
+      });
     }
   };
 

@@ -46,15 +46,15 @@ export const requestService = {
   },
 
   async acceptRequest(id: string) {
-    return api.patch<Request>(`/api/requests/${id}/accept`);
+    return api.post<Request>(`/api/requests/${id}/accept`);
   },
 
   async rejectRequest(id: string, reason?: string) {
-    return api.patch<Request>(`/api/requests/${id}/reject`, { rejectionReason: reason });
+    return api.post<Request>(`/api/requests/${id}/reject`, { rejectionReason: reason });
   },
 
   async withdrawRequest(id: string) {
-    return api.patch<Request>(`/api/requests/${id}/withdraw`);
+    return api.post<Request>(`/api/requests/${id}/withdraw`);
   },
 
   async deleteRequest(id: string) {

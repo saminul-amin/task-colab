@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/contexts/auth-context";
 import { authService } from "@/services/auth.service";
+import { useToast } from "@/hooks/use-toast";
 import { USER_ROLE_LABELS } from "@/types";
 import { ROLES } from "@/lib/constants";
 import {
@@ -41,12 +42,11 @@ export default function ProfilePage() {
   const { user, isAuthenticated, isLoading, refreshUser } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -79,17 +79,24 @@ export default function ProfilePage() {
     if (file) {
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        setErrorMessage("Image size must be less than 5MB");
+        toast({
+          title: "Error",
+          description: "Image size must be less than 5MB",
+          variant: "destructive",
+        });
         return;
       }
       // Validate file type
       if (!file.type.match(/^image\/(jpeg|png|gif|webp)$/)) {
-        setErrorMessage("Only JPEG, PNG, GIF, and WebP images are allowed");
+        toast({
+          title: "Error",
+          description: "Only JPEG, PNG, GIF, and WebP images are allowed",
+          variant: "destructive",
+        });
         return;
       }
       setSelectedImage(file);
       setImagePreview(URL.createObjectURL(file));
-      setErrorMessage(null);
     }
   };
 
@@ -98,22 +105,32 @@ export default function ProfilePage() {
 
     try {
       setIsUploadingImage(true);
-      setErrorMessage(null);
 
       const response = await authService.updateProfile({
         profileImage: selectedImage,
       });
 
       if (response.success) {
-        setSuccessMessage("Profile picture updated successfully!");
+        toast({
+          title: "Success",
+          description: "Profile picture updated successfully!",
+          variant: "success",
+        });
         setSelectedImage(null);
         refreshUser();
-        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        setErrorMessage(response.message || "Failed to upload image");
+        toast({
+          title: "Error",
+          description: response.message || "Failed to upload image",
+          variant: "destructive",
+        });
       }
     } catch {
-      setErrorMessage("An error occurred while uploading image");
+      toast({
+        title: "Error",
+        description: "An error occurred while uploading image",
+        variant: "destructive",
+      });
     } finally {
       setIsUploadingImage(false);
     }
@@ -124,7 +141,6 @@ export default function ProfilePage() {
 
     try {
       setIsSubmitting(true);
-      setErrorMessage(null);
 
       const response = await authService.updateProfile({
         name: name.trim(),
@@ -133,15 +149,26 @@ export default function ProfilePage() {
       });
 
       if (response.success) {
-        setSuccessMessage("Profile updated successfully!");
+        toast({
+          title: "Success",
+          description: "Profile updated successfully!",
+          variant: "success",
+        });
         setIsEditing(false);
         refreshUser();
-        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        setErrorMessage(response.message || "Failed to update profile");
+        toast({
+          title: "Error",
+          description: response.message || "Failed to update profile",
+          variant: "destructive",
+        });
       }
     } catch {
-      setErrorMessage("An error occurred while updating profile");
+      toast({
+        title: "Error",
+        description: "An error occurred while updating profile",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -151,23 +178,34 @@ export default function ProfilePage() {
     e.preventDefault();
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setErrorMessage("All password fields are required");
+      toast({
+        title: "Error",
+        description: "All password fields are required",
+        variant: "destructive",
+      });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setErrorMessage("New passwords do not match");
+      toast({
+        title: "Error",
+        description: "New passwords do not match",
+        variant: "destructive",
+      });
       return;
     }
 
     if (newPassword.length < 6) {
-      setErrorMessage("New password must be at least 6 characters");
+      toast({
+        title: "Error",
+        description: "New password must be at least 6 characters",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
       setIsChangingPassword(true);
-      setErrorMessage(null);
 
       const response = await authService.changePassword({
         currentPassword,
@@ -175,16 +213,27 @@ export default function ProfilePage() {
       });
 
       if (response.success) {
-        setSuccessMessage("Password changed successfully!");
+        toast({
+          title: "Success",
+          description: "Password changed successfully!",
+          variant: "success",
+        });
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        setErrorMessage(response.message || "Failed to change password");
+        toast({
+          title: "Error",
+          description: response.message || "Failed to change password",
+          variant: "destructive",
+        });
       }
     } catch {
-      setErrorMessage("An error occurred while changing password");
+      toast({
+        title: "Error",
+        description: "An error occurred while changing password",
+        variant: "destructive",
+      });
     } finally {
       setIsChangingPassword(false);
     }
@@ -220,19 +269,6 @@ export default function ProfilePage() {
   return (
     <FadeIn>
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Success/Error Messages */}
-        {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5" />
-            {successMessage}
-          </div>
-        )}
-        {errorMessage && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-lg">
-            {errorMessage}
-          </div>
-        )}
-
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Profile</h1>
           <p className="mt-1 text-muted-foreground">Manage your account information</p>

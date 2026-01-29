@@ -7,6 +7,7 @@ export interface IRegisterPayload {
   name: string;
   email: string;
   password: string;
+  role?: "buyer" | "problem_solver";
 }
 
 export interface IChangePasswordPayload {
