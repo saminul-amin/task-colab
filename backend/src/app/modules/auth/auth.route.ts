@@ -20,6 +20,12 @@ router.post(
 );
 
 router.post(
+  "/google",
+  validateRequest(AuthValidation.googleAuthValidation),
+  AuthController.googleAuth
+);
+
+router.post(
   "/change-password",
   auth(),
   validateRequest(AuthValidation.changePasswordValidation),

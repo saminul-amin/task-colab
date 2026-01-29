@@ -13,6 +13,14 @@ export interface RegisterPayload {
   role?: "buyer" | "problem_solver";
 }
 
+export interface GoogleAuthPayload {
+  googleId: string;
+  email: string;
+  name: string;
+  profileImage?: string;
+  role?: "buyer" | "problem_solver";
+}
+
 export interface AuthResponse {
   accessToken: string;
   user: {
@@ -42,6 +50,10 @@ export const authService = {
 
   async register(payload: RegisterPayload) {
     return api.post<AuthResponse>("/api/auth/register", payload);
+  },
+
+  async googleAuth(payload: GoogleAuthPayload) {
+    return api.post<AuthResponse>("/api/auth/google", payload);
   },
 
   async getMe() {

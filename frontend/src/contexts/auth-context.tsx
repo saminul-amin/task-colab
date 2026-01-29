@@ -13,6 +13,7 @@ import {
   authService,
   LoginPayload,
   RegisterPayload,
+  GoogleAuthPayload,
 } from "@/services/auth.service";
 import { User } from "@/types";
 
@@ -22,6 +23,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (payload: LoginPayload) => Promise<{ success: boolean; message: string }>;
   register: (payload: RegisterPayload) => Promise<{ success: boolean; message: string }>;
+  googleAuth: (payload: GoogleAuthPayload) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
 }
@@ -89,6 +91,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const googleAuth = async (payload: GoogleAuthPayload) => {
+    try {
+      const response = await authService.googleAuth(payload);
+      if (response.success && response.data) {
+        authService.setAuth(response.data.accessToken, response.data.user);
+        await refreshUser();
+        return { success: true, message: response.message };
+      }
+      return { success: false, message: response.message || "Google authentication failed" };
+    } catch (error) {
+      return { success: false, message: "An error occurred during Google authentication" };
+    }
+  };
+
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -103,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         login,
         register,
+        googleAuth,
         logout,
         refreshUser,
       }}

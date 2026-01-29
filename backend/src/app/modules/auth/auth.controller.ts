@@ -25,6 +25,17 @@ const login = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const googleAuth = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthService.googleAuth(req.body);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Google authentication successful",
+    data: result,
+  });
+});
+
 const changePassword = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user!.id;
   await AuthService.changePassword(userId, req.body);
@@ -65,6 +76,7 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
 export const AuthController = {
   register,
   login,
+  googleAuth,
   changePassword,
   getMe,
   updateProfile,

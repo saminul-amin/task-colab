@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { User, Mail, Lock, Loader2, Briefcase, ShoppingBag, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 type UserRole = "buyer" | "problem_solver";
 
@@ -223,6 +224,22 @@ export default function RegisterPage() {
                 `Create ${role === "buyer" ? "Buyer" : "Problem Solver"} Account`
               )}
             </Button>
+            
+            {/* Divider */}
+            <div className="relative w-full">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            {/* Google Sign-In */}
+            <GoogleSignInButton role={role} />
+
             <p className="text-sm text-center text-muted-foreground">
               Already have an account?{" "}
               <Link

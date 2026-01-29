@@ -6,6 +6,7 @@ import { uploadToCloudinary } from "../../config/cloudinary";
 import {
   IAuthResponse,
   IChangePasswordPayload,
+  IGoogleAuthPayload,
   IJwtPayload,
   ILoginPayload,
   IRegisterPayload,
@@ -27,6 +28,7 @@ const register = async (payload: IRegisterPayload): Promise<IAuthResponse> => {
     email: payload.email,
     password: payload.password,
     role,
+    authProvider: "local",
   });
 
   const jwtPayload: IJwtPayload = {
@@ -66,12 +68,82 @@ const login = async (payload: ILoginPayload): Promise<IAuthResponse> => {
     throw new AppError(httpStatus.FORBIDDEN, "This account has been blocked");
   }
 
+  // Check if user signed up with Google
+  if (user.authProvider === "google" && !user.password) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "This account uses Google Sign-In. Please sign in with Google."
+    );
+  }
+
   const isPasswordValid = await User.isPasswordMatched(
     payload.password,
-    user.password
+    user.password!
   );
   if (!isPasswordValid) {
     throw new AppError(httpStatus.UNAUTHORIZED, "Invalid email or password");
+  }
+
+  const jwtPayload: IJwtPayload = {
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role,
+  };
+
+  const accessToken = createToken(
+    jwtPayload,
+    envVars.JWT_SECRET,
+    envVars.JWT_EXPIRES_IN
+  );
+
+  return {
+    accessToken,
+    user: {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  };
+};
+
+const googleAuth = async (payload: IGoogleAuthPayload): Promise<IAuthResponse> => {
+  // Check if user already exists with this Google ID
+  let user = await User.isUserExistsByGoogleId(payload.googleId);
+
+  if (!user) {
+    // Check if email already exists (user signed up with email/password)
+    const existingEmailUser = await User.isUserExistsByEmail(payload.email);
+    
+    if (existingEmailUser) {
+      // Link Google account to existing user
+      existingEmailUser.googleId = payload.googleId;
+      if (!existingEmailUser.profileImage && payload.profileImage) {
+        existingEmailUser.profileImage = payload.profileImage;
+      }
+      await existingEmailUser.save();
+      user = existingEmailUser;
+    } else {
+      // Create new user with Google account
+      const role = payload.role === "buyer" ? USER_ROLES.BUYER : USER_ROLES.PROBLEM_SOLVER;
+      
+      user = await User.create({
+        name: payload.name,
+        email: payload.email,
+        googleId: payload.googleId,
+        profileImage: payload.profileImage,
+        role,
+        authProvider: "google",
+      });
+    }
+  }
+
+  if (user.isDeleted) {
+    throw new AppError(httpStatus.FORBIDDEN, "This account has been deleted");
+  }
+
+  if (user.status === USER_STATUS.BLOCKED) {
+    throw new AppError(httpStatus.FORBIDDEN, "This account has been blocked");
   }
 
   const jwtPayload: IJwtPayload = {
@@ -154,6 +226,7 @@ const updateProfile = async (
 export const AuthService = {
   register,
   login,
+  googleAuth,
   changePassword,
   getMe,
   updateProfile,

@@ -10,6 +10,14 @@ export interface IRegisterPayload {
   role?: "buyer" | "problem_solver";
 }
 
+export interface IGoogleAuthPayload {
+  googleId: string;
+  email: string;
+  name: string;
+  profileImage?: string;
+  role?: "buyer" | "problem_solver";
+}
+
 export interface IChangePasswordPayload {
   currentPassword: string;
   newPassword: string;

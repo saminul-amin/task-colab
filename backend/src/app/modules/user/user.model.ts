@@ -21,9 +21,18 @@ const userSchema = new Schema<IUserDocument, IUserModel>(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
       select: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
     },
     role: {
       type: String,
@@ -75,10 +84,11 @@ const userSchema = new Schema<IUserDocument, IUserModel>(
 
 // Index for faster queries
 userSchema.index({ role: 1, status: 1 });
+userSchema.index({ googleId: 1 });
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password") || !this.password) return next();
 
   this.password = await bcrypt.hash(this.password, envVars.BCRYPT_SALT_ROUNDS);
   next();
@@ -103,6 +113,13 @@ userSchema.statics.isUserExistsByEmail = async function (
   email: string
 ): Promise<IUserDocument | null> {
   return await this.findOne({ email, isDeleted: false }).select("+password");
+};
+
+// Static method: Check if user exists by Google ID
+userSchema.statics.isUserExistsByGoogleId = async function (
+  googleId: string
+): Promise<IUserDocument | null> {
+  return await this.findOne({ googleId, isDeleted: false });
 };
 
 // Static method: Check if password matches

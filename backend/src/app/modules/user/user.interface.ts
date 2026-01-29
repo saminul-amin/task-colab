@@ -4,7 +4,9 @@ import { TUserRole, TUserStatus } from "./user.constant";
 export interface IUser {
   name: string;
   email: string;
-  password: string;
+  password?: string;
+  googleId?: string;
+  authProvider: "local" | "google";
   role: TUserRole;
   status: TUserStatus;
   phone?: string;
@@ -23,6 +25,7 @@ export interface IUserDocument extends IUser, Document {
 
 export interface IUserModel extends Model<IUserDocument> {
   isUserExistsByEmail(email: string): Promise<IUserDocument | null>;
+  isUserExistsByGoogleId(googleId: string): Promise<IUserDocument | null>;
   isPasswordMatched(
     plainPassword: string,
     hashedPassword: string

@@ -33,6 +33,25 @@ export const registerValidation = z.object({
   }),
 });
 
+export const googleAuthValidation = z.object({
+  body: z.object({
+    googleId: z.string().min(1, "Google ID is required"),
+    email: z
+      .string()
+      .min(1, "Email is required")
+      .email("Invalid email format"),
+    name: z
+      .string()
+      .min(1, "Name is required")
+      .max(100, "Name cannot exceed 100 characters"),
+    profileImage: z.string().url().optional(),
+    role: z
+      .enum(["buyer", "problem_solver"])
+      .optional()
+      .default("problem_solver"),
+  }),
+});
+
 export const changePasswordValidation = z.object({
   body: z.object({
     currentPassword: z.string().min(1, "Current password is required"),
@@ -47,5 +66,6 @@ export const changePasswordValidation = z.object({
 export const AuthValidation = {
   loginValidation,
   registerValidation,
+  googleAuthValidation,
   changePasswordValidation,
 };
