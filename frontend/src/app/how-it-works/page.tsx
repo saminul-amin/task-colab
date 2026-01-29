@@ -263,6 +263,14 @@ export default function HowItWorksPage() {
               </CardContent>
             </Card>
           </div>
+          
+          <div className="text-center mt-8">
+            <Link href="/faq">
+              <Button variant="outline">
+                View All FAQs
+              </Button>
+            </Link>
+          </div>
         </section>
 
         {/* CTA Section */}
