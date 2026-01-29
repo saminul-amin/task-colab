@@ -178,6 +178,14 @@ const changePassword = async (
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
+  // Check if user has a password (Google OAuth users might not)
+  if (!user.password) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Cannot change password for accounts using Google Sign-In"
+    );
+  }
+
   const isPasswordValid = await User.isPasswordMatched(
     payload.currentPassword,
     user.password
